@@ -14,9 +14,10 @@ interface FieldRowProps {
   onAddNested: (parentId: string) => void;
   canDelete: boolean;
   level?: number;
+  hasSiblings?: boolean;
 }
 
-function FieldRow({ field, onUpdate, onDelete, onAddNested, canDelete, level = 0 }: FieldRowProps) {
+function FieldRow({ field, onUpdate, onDelete, onAddNested, canDelete, level = 0, hasSiblings = false }: FieldRowProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [isEnabled, setIsEnabled] = useState(true);
   const isNested = field.type === "nested";
@@ -47,91 +48,124 @@ function FieldRow({ field, onUpdate, onDelete, onAddNested, canDelete, level = 0
     onUpdate({ ...field, children: updatedChildren });
   };
 
-  const marginLeft = level * 10;
+  const marginLeft = level * 20;
 
   return (
-    <div style={{ marginLeft: `${marginLeft}px` }} className="mb-2">
-      {/* Main field row */}
-      <div className="flex items-center gap-2 p-2 bg-muted/30 rounded-md">
-        {isNested && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="p-1 h-6 w-6"
-          >
-            {isExpanded ? (
-              <ChevronDown className="h-3 w-3" />
-            ) : (
-              <ChevronRight className="h-3 w-3" />
-            )}
-          </Button>
+    <div className="relative">
+              {/* Vertical line for nesting  showing the nested json*/}
+        {level > 0 && (
+          <div 
+            className="absolute left-0 top-0 bottom-0 w-1 bg-border"
+            style={{ 
+              left: `${marginLeft - 10}px`,
+              height: '100%'
+            }}
+          />
         )}
+      
+      <div style={{ marginLeft: `${marginLeft}px` }} className="mb-2">
+        {/* Main field row */}
+        <div className="flex items-center gap-2 p-2 bg-muted/30 rounded-md relative">
+          {/* Horizontal connector line */}
+          {level > 0 && (
+            <div 
+              className="absolute left-0 top-1/2 w-2 h-px bg-border transform -translate-y-1/2"
+              style={{ left: '-10px' }}
+            />
+          )}
+          
+          {isNested && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="p-1 h-6 w-6"
+            >
+              {isExpanded ? (
+                <ChevronDown className="h-3 w-3" />
+              ) : (
+                <ChevronRight className="h-3 w-3" />
+              )}
+            </Button>
+          )}
 
-        <Input
-          placeholder="field name"
-          value={field.key}
-          onChange={(e) => handleKeyChange(e.target.value)}
-          className="flex-1 h-8 text-sm bg-background"
-        />
+          <Input
+            placeholder="field name"
+            value={field.key}
+            onChange={(e) => handleKeyChange(e.target.value)}
+            className="flex-1 h-8 text-sm bg-background"
+          />
 
-        <Select value={field.type} onValueChange={handleTypeChange}>
-          <SelectTrigger className="w-24 h-8 text-sm">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="string">string</SelectItem>
-            <SelectItem value="number">number</SelectItem>
-            <SelectItem value="nested">nested</SelectItem>
-          </SelectContent>
-        </Select>
+          <Select value={field.type} onValueChange={handleTypeChange}>
+            <SelectTrigger className="w-24 h-8 text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="string">string</SelectItem>
+              <SelectItem value="number">number</SelectItem>
+              <SelectItem value="nested">nested</SelectItem>
+            </SelectContent>
+          </Select>
 
-        {/* <Switch 
-          checked={isEnabled} 
-          onCheckedChange={setIsEnabled}
-          className="scale-75"
-        /> */}
+          {/* <Switch 
+            checked={isEnabled} 
+            onCheckedChange={setIsEnabled}
+            className="scale-75"
+          /> */}
 
-        {canDelete && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onDelete}
-            className="p-1 h-6 w-6 text-muted-foreground hover:text-destructive"
-          >
-            <X className="h-3 w-3" />
-          </Button>
+          {canDelete && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onDelete}
+              className="p-1 h-6 w-6 text-muted-foreground hover:text-destructive"
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          )}
+        </div>
+
+        {/* Nested children */}
+        {isNested && isExpanded && (
+          <div className="mt-2 relative">
+            {/* Vertical line extending from parent to children */}
+            {field.children && field.children.length > 0 && (
+              <div 
+                className="absolute left-0 top-0 bottom-0 w-1 bg-border"
+                style={{ 
+                  left: `${marginLeft + 10}px`,
+                  height: '100%'
+                }}
+              />
+            )}
+            
+            {field.children?.map((child, index) => (
+              <FieldRow
+                key={child.id}
+                field={child}
+                onUpdate={handleNestedUpdate}
+                onDelete={() => handleNestedDelete(child.id)}
+                onAddNested={onAddNested}
+                canDelete={true}
+                level={level + 1}
+                hasSiblings={field.children && field.children.length > 1}
+              />
+            ))}
+            
+            <div style={{ marginLeft: `${(level + 1) * 20}px` }} className="mt-2">
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => onAddNested(field.id)}
+                className="w-full h-8 text-sm bg-primary text-primary-foreground"
+              >
+                <Plus className="w-3 h-3 mr-1" />
+                Add Item
+              </Button>
+            </div>
+          </div>
         )}
       </div>
-
-      {/* Nested children */}
-      {isNested && isExpanded && (
-        <div className="mt-2">
-          {field.children?.map((child) => (
-            <FieldRow
-              key={child.id}
-              field={child}
-              onUpdate={handleNestedUpdate}
-              onDelete={() => handleNestedDelete(child.id)}
-              onAddNested={onAddNested}
-              canDelete={true}
-              level={level + 1}
-            />
-          ))}
-          
-          <div style={{ marginLeft: `${(level + 1) * 20}px` }} className="mt-2">
-            <Button
-              variant="default"
-              size="sm"
-              onClick={() => onAddNested(field.id)}
-              className="w-full h-8 text-sm bg-primary text-primary-foreground"
-            >
-              <Plus className="w-3 h-3 mr-1" />
-              Add Item
-            </Button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
