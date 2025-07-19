@@ -239,6 +239,20 @@ export function SimpleSchemaBuilder() {
     return result;
   };
 
+  const downloadJsonFile = () => {
+    const jsonData = generateJson(fields);
+    const jsonString = JSON.stringify(jsonData, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'schema.json';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-7xl mx-auto">
@@ -285,12 +299,21 @@ export function SimpleSchemaBuilder() {
             <CardHeader className="pb-3">
               <CardTitle className="text-lg">JSON Preview</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <div className="bg-muted/50 p-4 rounded-md">
                 <pre className="text-xs font-mono text-foreground whitespace-pre-wrap overflow-auto">
                   <code>{JSON.stringify(generateJson(fields), null, 2)}</code>
                 </pre>
               </div>
+              
+              <Button
+                variant="default"
+                onClick={downloadJsonFile}
+                className="w-full h-10 text-sm bg-green-600 hover:bg-green-700 text-white"
+                disabled={fields.length === 0 || fields.every(field => !field.key)}
+              >
+                Download JSON File
+              </Button>
             </CardContent>
           </Card>
         </div>
