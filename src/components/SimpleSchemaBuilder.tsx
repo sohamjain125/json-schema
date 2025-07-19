@@ -47,7 +47,7 @@ function FieldRow({ field, onUpdate, onDelete, onAddNested, canDelete, level = 0
     onUpdate({ ...field, children: updatedChildren });
   };
 
-  const marginLeft = level * 20;
+  const marginLeft = level * 10;
 
   return (
     <div style={{ marginLeft: `${marginLeft}px` }} className="mb-2">
