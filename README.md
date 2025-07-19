@@ -40,3 +40,4 @@ This project is built with:
 - Recursive nested field support
 - Add/Delete/Edit field functionality
 - Modern UI with ShadCN components
+- A download button that will download the created json
