@@ -180,7 +180,7 @@ export function SimpleSchemaBuilder() {
       id: generateId(),
       key: "",
       type: "string",
-      value: "STRING"
+      value: "string"
     };
     setFields([...fields, newField]);
   };
@@ -203,7 +203,7 @@ export function SimpleSchemaBuilder() {
             id: generateId(),
             key: "",
             type: "string",
-            value: "STRING"
+            value: "string"
           };
           return {
             ...field,
@@ -232,7 +232,7 @@ export function SimpleSchemaBuilder() {
       if (field.type === "nested" && field.children) {
         result[field.key] = generateJson(field.children);
       } else {
-        result[field.key] = field.value || (field.type === "number" ? "number" : "STRING");
+        result[field.key] = field.value || (field.type === "number" ? "number" : "string");
       }
     });
     
